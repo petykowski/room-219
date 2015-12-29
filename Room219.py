@@ -1,4 +1,7 @@
 #!/usr/bin/python
+
+# v1.01
+
 import pymysql.cursors
 import random
 import time
