@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# v1.01
+# v1.02
 
 import pymysql.cursors
 import random
@@ -44,19 +44,32 @@ while True:
             cursor.execute(currentID)
             result = cursor.fetchone()
             tempID = result['COUNT(TempID)']
-
-        # Write Temperature and TempID to database
+            
+        # Convert Celsius to Fahrenheit
+        degressInFahrenheit = degreesInCelsius * 1.8 + 32
+        
+        # Sensor is reading room temperature. Reading should not exceed 5 degrees since last reading.
         with connection.cursor() as cursor:
-                degressInFahrenheit = degreesInCelsius * 1.8 + 32
+            getLastTemperatureEntry = "SELECT TemperatureF FROM env_sensors ORDER BY TempID DESC LIMIT 1"
+            cursor.execute(getLastTemperatureEntry)
+            fetchedLastTemperatureEntry = cursor.fetchone()
+            lastTemperatureEntry = fetchedLastTemperatureEntry['TemperatureF']
+            
+            # Verify that Temperature Reading is Correct
+            if degressInFahrenheit < lastTemperatureEntry - 5 or degressInFahrenheit > lastTemperatureEntry + 5:
+                print "Incorrect reading from sensor. Ignoring last reading."
+            else:
+                # Write Temperature and TempID to database
                 sql = "INSERT INTO env_sensors (TempID, TemperatureF, TemperatureC, Date_Time) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)"
                 cursor.execute(sql, (tempID, degressInFahrenheit, degreesInCelsius))
                 connection.commit()
                 print "Record", degressInFahrenheit, "F at", str(datetime.datetime.now())
         time.sleep(60)
+        
     else:
         badReadings = badReadings + 1
         print badReadings
         if badReadings == 3:
-            print "Incorrect measurement. Re-Attempting..."
+            print "Sensor is not responding. Re-Attempting..."
             badReadings = 0
     time.sleep(1)
