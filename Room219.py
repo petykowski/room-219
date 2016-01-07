@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# v1.02
+# v1.03
 
+# Import Resources
 import pymysql.cursors
-import random
 import time
 import RPi.GPIO as GPIO
 import dht11
@@ -16,7 +16,7 @@ connection = pymysql.connect(
     user=config.user,
     password=config.password,
     db=config.db,
-    charset='utf8mb4',
+    charset=config.charset,
     cursorclass=pymysql.cursors.DictCursor
 )
 
@@ -25,8 +25,8 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.cleanup()
 
-# Configure DHT11 to Operate on Pin 4
-sensor = dht11.DHT11(pin = 4)
+# Configure DHT11 to Operate on User Defined Pin
+sensor = dht11.DHT11(pin = config.pin)
 
 # Set Bad Readings Value to 0
 badReadings = 0
