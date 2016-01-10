@@ -10,7 +10,12 @@ import dht11
 import datetime
 import config
 import subprocess
+import argparse
 
+# Configure argparse
+parser = argparse.ArgumentParser(description='Process to gather temperature data and write to MySQL database.')
+parser.add_argument('command', choices=['start', 'stop', 'restart'])
+args = parser.parse_args()
 
 # Establish Connection to Local MySQL Database
 connection = pymysql.connect(
@@ -33,55 +38,59 @@ sensor = dht11.DHT11(pin = config.pin)
 # Set Bad Readings Value to 0
 badReadings = 0
 
-def stop():
-    PID = subprocess.check_output("ps -ax | grep -v grep | grep Room219.py | awk '{print $1}'", shell=True).replace('\n','')
-    print PID
-    subprocess.call(["kill", output])
+if args.command == "stop":
+    PID = subprocess.check_output("ps -ax | grep -v grep | grep Room219.py\ start | awk '{print $1}'", shell=True).replace('\n','')
+    if PID == "":
+        print "Process Room 219 is not currently running."
+    else:    
+        print "Killing process " + PID + "."
+        subprocess.call(["kill", PID])
 
-try:
-    while True:
-        result = sensor.read()
-        if result.is_valid():
-            degreesInCelsius = result.temperature
-            badReadings = 0
-
-            # Establish a connection to request current Temperature ID
-            # Temperature ID is numerical order value
-            with connection.cursor() as cursor:
-                currentID = "SELECT COUNT(TempID) FROM env_sensors"
-                cursor.execute(currentID)
-                result = cursor.fetchone()
-                tempID = result['COUNT(TempID)']
-
-            # Convert Celsius to Fahrenheit
-            degressInFahrenheit = degreesInCelsius * 1.8 + 32
-
-            # Sensor is reading room temperature. Reading should not exceed 5 degrees since last reading.
-            with connection.cursor() as cursor:
-                getLastTemperatureEntry = "SELECT TemperatureF FROM env_sensors ORDER BY TempID DESC LIMIT 1"
-                cursor.execute(getLastTemperatureEntry)
-                fetchedLastTemperatureEntry = cursor.fetchone()
-                lastTemperatureEntry = fetchedLastTemperatureEntry['TemperatureF']
-
-                # Verify that Temperature Reading is Correct
-                if degressInFahrenheit < lastTemperatureEntry - 5 or degressInFahrenheit > lastTemperatureEntry + 5:
-                    print "Incorrect reading from sensor. Ignoring last reading."
-                else:
-                    # Write Temperature and TempID to database
-                    sql = "INSERT INTO env_sensors (TempID, TemperatureF, TemperatureC, Date_Time) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)"
-                    cursor.execute(sql, (tempID, degressInFahrenheit, degreesInCelsius))
-                    connection.commit()
-                    print "Record", degressInFahrenheit, "F at", str(datetime.datetime.now())
-            time.sleep(60)
-
-        else:
-            badReadings = badReadings + 1
-            print badReadings
-            if badReadings == 3:
-                print "Sensor is not responding. Re-Attempting..."
+if args.command == "start":
+    try:
+        while True:
+            result = sensor.read()
+            if result.is_valid():
+                degreesInCelsius = result.temperature
                 badReadings = 0
-        time.sleep(1)
-    
-finally:
-    print "reached finally"
-    connection.close()
+
+                # Establish a connection to request current Temperature ID
+                # Temperature ID is numerical order value
+                with connection.cursor() as cursor:
+                    currentID = "SELECT COUNT(TempID) FROM env_sensors"
+                    cursor.execute(currentID)
+                    result = cursor.fetchone()
+                    tempID = result['COUNT(TempID)']
+
+                # Convert Celsius to Fahrenheit
+                degressInFahrenheit = degreesInCelsius * 1.8 + 32
+
+                # Sensor is reading room temperature. Reading should not exceed 5 degrees since last reading.
+                with connection.cursor() as cursor:
+                    getLastTemperatureEntry = "SELECT TemperatureF FROM env_sensors ORDER BY TempID DESC LIMIT 1"
+                    cursor.execute(getLastTemperatureEntry)
+                    fetchedLastTemperatureEntry = cursor.fetchone()
+                    lastTemperatureEntry = fetchedLastTemperatureEntry['TemperatureF']
+
+                    # Verify that Temperature Reading is Correct
+                    if degressInFahrenheit < lastTemperatureEntry - 5 or degressInFahrenheit > lastTemperatureEntry + 5:
+                        print "Incorrect reading from sensor. Ignoring last reading."
+                    else:
+                        # Write Temperature and TempID to database
+                        sql = "INSERT INTO env_sensors (TempID, TemperatureF, TemperatureC, Date_Time) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)"
+                        cursor.execute(sql, (tempID, degressInFahrenheit, degreesInCelsius))
+                        connection.commit()
+                        print "Record", degressInFahrenheit, "F at", str(datetime.datetime.now())
+                time.sleep(60)
+
+            else:
+                badReadings = badReadings + 1
+                print badReadings
+                if badReadings == 3:
+                    print "Sensor is not responding. Re-Attempting..."
+                    badReadings = 0
+            time.sleep(1)
+
+    finally:
+        print "reached finally"
+        connection.close()
