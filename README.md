@@ -18,13 +18,17 @@ Requirements
 
 Installation
 -----------
-Navigate to your directory in Terminal.app.
+Navigate to your working directory in Terminal.app.
 ```shell
 $ cd /path/to/working/directory
 ```
 Clone the repo to your directory.
 ```shell
 $ git clone https://github.com/spetykowski/room-219.git
+```
+Clone [szazo's DHT11 Python library](https://github.com/szazo/DHT11_Python) repo to your directory.
+```shell
+$ git clone https://github.com/szazo/DHT11_Python.git
 ```
 Rename file [config_example.py] (https://github.com/spetykowski/room-219/blob/master/config_example.py) to config.py.
 ```shell
