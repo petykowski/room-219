@@ -73,7 +73,7 @@ if args.command == "start":
                     lastTemperatureEntry = fetchedLastTemperatureEntry['TemperatureF']
 
                     # Verify that Temperature Reading is Correct
-                    if degressInFahrenheit < lastTemperatureEntry - 5 or degressInFahrenheit > lastTemperatureEntry + 5:
+                    if degressInFahrenheit < lastTemperatureEntry - 10 or degressInFahrenheit > lastTemperatureEntry + 10:
                         print "Incorrect reading from sensor. Ignoring last reading."
                     else:
                         # Write Temperature and TempID to database
