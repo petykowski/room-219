@@ -3,7 +3,7 @@ Room 219
 
 Objectives
 -------
-Measure room temperature and write to MySQL database for use on website, iOS and Apple Watch app.
+Measure room temperature and write to MySQL database for use on website, iOS, and Apple Watch app.
 
 Example
 -------
