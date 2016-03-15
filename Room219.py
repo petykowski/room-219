@@ -33,6 +33,10 @@ GPIO.setmode(GPIO.BCM)
 GPIO.cleanup()
 
 # Configure DHT11 to Operate on User Defined Pin
+led = 26
+GPIO.setup(led, GPIO.OUT)
+
+# Configure DHT11 to Operate on GPIO
 sensor = dht11.DHT11(pin = config.pin)
 
 # Set Bad Readings Value to 0
@@ -53,6 +57,7 @@ if args.command == "start":
             if result.is_valid():
                 degreesInCelsius = result.temperature
                 badReadings = 0
+                GPIO.output(led, 1)
 
                 # Establish a connection to request current Temperature ID
                 # Temperature ID is numerical order value
@@ -81,9 +86,12 @@ if args.command == "start":
                         cursor.execute(sql, (tempID, degressInFahrenheit, degreesInCelsius))
                         connection.commit()
                         print "Record", degressInFahrenheit, "F at", str(datetime.datetime.now())
-                time.sleep(60)
+                        GPIO.output(led, 0)
+                        
+                time.sleep(10)
 
             else:
+                print("Error: %d" % result.error_code)
                 badReadings = badReadings + 1
                 print badReadings
                 if badReadings == 3:
