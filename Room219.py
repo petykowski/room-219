@@ -88,7 +88,7 @@ if args.command == "start":
                         print "Record", degressInFahrenheit, "F at", str(datetime.datetime.now())
                         GPIO.output(led, 0)
                         
-                time.sleep(10)
+                time.sleep(60)
 
             else:
                 print("Error: %d" % result.error_code)
