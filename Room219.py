@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# v1.04
+# v2.00
 
 # Import Resources
 import pymysql.cursors
@@ -11,10 +11,11 @@ import datetime
 import config
 import subprocess
 import argparse
+import Adafruit_DHT
 
 # Configure argparse
 parser = argparse.ArgumentParser(description='Process to gather temperature data and write to MySQL database.')
-parser.add_argument('command', choices=['start', 'stop', 'restart'])
+parser.add_argument('command', choices=['start', 'stop', 'restart', 'test'])
 args = parser.parse_args()
 
 # Establish Connection to Local MySQL Database
@@ -36,8 +37,12 @@ GPIO.cleanup()
 led = 26
 GPIO.setup(led, GPIO.OUT)
 
-# Configure DHT11 to Operate on GPIO
-sensor = dht11.DHT11(pin = config.pin)
+# Configure DHT11 to Operate on GPIO (Deprecated)
+#sensor = dht11.DHT11(pin = config.pin)
+
+# Configure Sensor to DHT 22 to GPIO Pin
+sensor = Adafruit_DHT.DHT22
+pin = config.pin
 
 # Set Bad Readings Value to 0
 badReadings = 0
@@ -49,6 +54,13 @@ if args.command == "stop":
     else:    
         print "Killing process " + PID + "."
         subprocess.call(["kill", PID])
+        
+if args.command == "test":
+    humidity, temperature = Adafruit_DHT.read(sensor, pin)
+    if humidity is not None and temperature is not None:
+        print('Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(temperature, humidity))
+    else:
+        print('Failed to get reading. Try again!')
 
 if args.command == "start":
     try:
