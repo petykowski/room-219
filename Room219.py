@@ -61,13 +61,13 @@ if args.command == "test":
         print('Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(temperature, humidity))
     else:
         print('Failed to get reading. Try again!')
-
+        
 if args.command == "start":
     try:
         while True:
-            result = sensor.read()
-            if result.is_valid():
-                degreesInCelsius = result.temperature
+            humidity, temperature = Adafruit_DHT.read(sensor, pin)
+            if humidity is not None and temperature is not None:
+                degreesInCelsius = temperature
                 badReadings = 0
                 GPIO.output(led, 1)
 
@@ -103,7 +103,7 @@ if args.command == "start":
                 time.sleep(60)
 
             else:
-                print("Error: %d" % result.error_code)
+#                print("Error: %d" % result.error_code)
                 badReadings = badReadings + 1
                 print badReadings
                 if badReadings == 3:
